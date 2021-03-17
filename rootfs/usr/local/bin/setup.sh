@@ -309,6 +309,26 @@ if [ -f /var/mail/postfix/custom.conf ]; then
   echo "[INFO] Custom Postfix configuration file loaded"
 fi
 
+#
+# Initialize rbl_override configuration
+#
+if [ -d "/etc/postifx/rbl_override" ]; then
+  echo "[ERROR] The `/etc/postfix/rbl_override` is a folder instead of a file.  Please fix it."
+  exit 1;
+fi
+
+if [ ! -f "/etc/postfix/rbl_override" ]; then
+  touch /etc/postfix/rbl_override
+  echo "[INFO] Created default (empty) rbl_override file"
+else
+  echo "[INFO] /etc/postfix/rbl_override file found"
+fi
+
+if [ -f "/etc/postfix/rbl_override" ]; then
+  postmap /etc/postfix/rbl_override
+  echo "[INFO] RBL Override initialized"
+fi
+
 # DOVECOT TUNING
 # ---------------------------------------------------------------------------------------------
 
