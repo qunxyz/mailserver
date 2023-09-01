@@ -36,7 +36,7 @@ init_redis:
 	docker run \
 		-d \
 		--name redis \
-		-t redis:6.2-alpine
+		-t redis:7.0-alpine
 	sleep 10
 
 init_mariadb:
@@ -51,7 +51,7 @@ init_mariadb:
 		-e MYSQL_PASSWORD=testpasswd \
 		-v "`pwd`/test/config/mariadb/struct.sql":/docker-entrypoint-initdb.d/struct.sql \
 		-v "`pwd`/test/config/mariadb/bind.cnf":/etc/mysql/conf.d/bind.cnf \
-		-t mysql:5.7
+		-t mysql:8
 
 init_postgres:
 	-docker rm -f \
@@ -198,7 +198,8 @@ init_ldap2: init_openldap init_redis
 		-h mail.domain.tld \
 		-t $(NAME)
 fixtures_ldap2:
-	sleep 20
+	docker exec mailserver_ldap2 /bin/sh -c "while ! echo PING | nc -z 0.0.0.0 25 ; do sleep 1 ; done"
+	sleep 30
 	docker exec mailserver_ldap2 /bin/sh -c "nc 0.0.0.0 25 < /tmp/tests/email-templates/external-to-existing-user.txt"
 	docker exec mailserver_ldap2 /bin/sh -c "nc 0.0.0.0 25 < /tmp/tests/email-templates/external-to-valid-user-subaddress.txt"
 	docker exec mailserver_ldap2 /bin/sh -c "nc 0.0.0.0 25 < /tmp/tests/email-templates/external-to-non-existing-user.txt"
@@ -282,6 +283,7 @@ init_reverse: init_redis init_postgres
 		-v "`pwd`/test/share/letsencrypt":/etc/letsencrypt \
 		-t $(NAME)
 fixtures_reverse:
+	docker exec mailserver_reverse /bin/sh -c "while ! echo PING | nc -z 0.0.0.0 25 ; do sleep 1 ; done"
 	sleep 30
 	docker exec mailserver_reverse /bin/sh -c "nc 0.0.0.0 25 < /tmp/tests/email-templates/external-to-existing-user.txt"
 	docker exec mailserver_reverse /bin/sh -c "nc 0.0.0.0 25 < /tmp/tests/email-templates/external-to-valid-user-subaddress-with-default-separator.txt"
@@ -318,8 +320,8 @@ init_ecdsa: init_redis init_mariadb
 		-v "`pwd`/test/share/postfix/custom.ecdsa.conf":/var/mail/postfix/custom.conf \
 		-h mail.domain.tld \
 		-t $(NAME)
-	sleep 10
 run_ecdsa:
+	docker exec mailserver_ecdsa /bin/sh -c "while ! echo PING | nc -z 0.0.0.0 587 ; do sleep 1 ; done"
 	./test/bats/bin/bats test/ecdsa.bats
 stop_ecdsa:
 	-docker rm -f \
@@ -344,7 +346,7 @@ init_traefik_acmev1: init_redis init_mariadb
 		-h mail.domain.tld \
 		-t $(NAME)
 run_traefik_acmev1:
-	sleep 20
+	docker exec mailserver_traefik_acmev1 /bin/sh -c "while ! echo PING | nc -z 0.0.0.0 587 ; do sleep 1 ; done"
 	./test/bats/bin/bats test/traefik_acmev1.bats
 stop_traefik_acmev1:
 	-docker rm -f \
@@ -369,7 +371,7 @@ init_traefik_acmev2: init_redis init_mariadb
 		-h mail.domain.tld \
 		-t $(NAME)
 run_traefik_acmev2:
-	sleep 20
+	docker exec mailserver_traefik_acmev2 /bin/sh -c "while ! echo PING | nc -z 0.0.0.0 587 ; do sleep 1 ; done"
 	./test/bats/bin/bats test/traefik_acmev2.bats
 stop_traefik_acmev2:
 	-docker rm -f \
