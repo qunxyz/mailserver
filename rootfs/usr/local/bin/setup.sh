@@ -50,6 +50,10 @@ CAFILE=/ssl/chain.pem
 CERTFILE=/ssl/cert.pem
 KEYFILE=/ssl/privkey.pem
 
+# Set permissions
+mkdir -p /var/mail/rspamd /var/log/rspamd /run/rspamd
+chmod 750 /var/mail/rspamd /var/log/rspamd
+
 # DKIM KEYS
 # ---------------------------------------------------------------------------------------------
 
@@ -536,6 +540,9 @@ fi
 chgrp -R postdrop /var/mail/postfix/spool/public
 chgrp -R postdrop /var/mail/postfix/spool/maildrop
 postfix set-permissions &>/dev/null
+if [ -f "/etc/postfix/certs_map" ]; then
+  postmap -F hash:/etc/postfix/certs_map
+fi
 
 # ZEYPLE
 # ---------------------------------------------------------------------------------------------
@@ -683,10 +690,7 @@ fi
 
 sed -i "s|<PASSWORD>|${PASSWORD}|g" /etc/rspamd/local.d/worker-controller.inc
 
-# Set permissions
-mkdir -p /var/mail/rspamd /var/log/rspamd /run/rspamd
 chown -R _rspamd:_rspamd /var/mail/rspamd /var/log/rspamd /run/rspamd /var/mail/dkim
-chmod 750 /var/mail/rspamd /var/log/rspamd
 
 # Fix old DKIM keys permissions
 chmod 444 /var/mail/dkim/*/*.public.key

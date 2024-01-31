@@ -9,6 +9,8 @@ CERT_TEMP_PATH=/tmp/ssl
 LETS_ENCRYPT_LIVE_PATH=/etc/letsencrypt/live/"$FQDN"
 LIVE_CERT_PATH=/ssl
 RENEWED_CERTIFICATE=false
+SSL_MAP=/etc/postfix/ssl_map
+CERTS_MAP=/etc/postfix/certs_map
 
 _normalize_certs() {
   SSL_DIR="$1"
@@ -138,6 +140,9 @@ elif [ "$1" = "update_certs" ]; then
       fi
 
       cp -RT "$SELFSIGNED_PATH/." "$NORMALIZED_CERT_PATH"
+      if [ -f "$SSL_MAP" ]; then
+        cp "$SSL_MAP" "$CERTS_MAP"
+      fi
     fi
   fi
 
